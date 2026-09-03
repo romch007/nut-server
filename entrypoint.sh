@@ -13,6 +13,7 @@ set -eu
 
 : "${NUT_USER:=homeassistant}"
 : "${NUT_PASSWORD:?NUT_PASSWORD must be set}"
+: "${NUT_INSTCMDS:=}"
 
 mkdir -p /run/nut /var/state/nut
 chown -R nut:nut /run/nut /var/state/nut
@@ -34,11 +35,19 @@ cat > /etc/nut/upsd.conf <<EOF
 LISTEN $NUT_LISTEN $NUT_PORT
 EOF
 
-cat > /etc/nut/upsd.users <<EOF
-[$NUT_USER]
-    password = $NUT_PASSWORD
-    upsmon slave
-EOF
+{
+    echo "[$NUT_USER]"
+    echo "    password = $NUT_PASSWORD"
+
+    if [ -n "$NUT_INSTCMDS" ]; then
+        OLDIFS="$IFS"
+        IFS=','
+        for cmd in $NUT_INSTCMDS; do
+            echo "    instcmds = $cmd"
+        done
+        IFS="$OLDIFS"
+    fi
+} > /etc/nut/upsd.users
 
 chmod 640 /etc/nut/upsd.users
 chown nut:nut /etc/nut/*.conf /etc/nut/upsd.users
