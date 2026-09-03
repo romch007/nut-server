@@ -44,7 +44,7 @@ chmod 640 /etc/nut/upsd.users
 chown nut:nut /etc/nut/*.conf /etc/nut/upsd.users
 
 echo "Starting NUT driver..."
-su-exec nut upsdrvctl start
+upsdrvctl start
 
 echo "Starting NUT server..."
-exec su-exec nut upsd -F
+nut upsd -F
