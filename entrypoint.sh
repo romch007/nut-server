@@ -52,8 +52,25 @@ EOF
 chmod 640 /etc/nut/upsd.users
 chown nut:nut /etc/nut/*.conf /etc/nut/upsd.users
 
+UPSD_PID=""
+
+shutdown() {
+    echo "Shutting down..."
+    if [ -n "$UPSD_PID" ]; then
+        kill -TERM "$UPSD_PID" 2>/dev/null || true
+        wait "$UPSD_PID" 2>/dev/null || true
+    fi
+    /usr/sbin/upsdrvctl stop || true
+    exit 0
+}
+
+trap shutdown TERM INT QUIT
+
 echo "Starting NUT driver..."
 /usr/sbin/upsdrvctl -u root start
 
 echo "Starting NUT server..."
-/usr/sbin/upsd -u root -F
+/usr/sbin/upsd -u root -F &
+UPSD_PID=$!
+
+wait "$UPSD_PID"
